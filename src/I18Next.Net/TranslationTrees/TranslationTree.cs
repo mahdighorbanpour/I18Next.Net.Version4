@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace I18Next.Net.TranslationTrees;
 
@@ -12,6 +13,9 @@ public class TranslationTree : ITranslationTree
 
     public TranslationTreeNode Root { get; set; }
 
+    private readonly ConcurrentDictionary<TranslationGroup, Dictionary<string, TranslationTreeNode>> _childrenLookup
+        = new();
+
     public IDictionary<string, string> GetAllValues()
     {
         var result = new Dictionary<string, string>();
@@ -19,57 +23,91 @@ public class TranslationTree : ITranslationTree
         if (Root == null)
             return result;
 
-        MapTranslationGroup(result, (TranslationGroup) Root);
+        var stack = new Stack<TranslationTreeNode>();
+        stack.Push(Root);
+
+        while (stack.Count > 0)
+        {
+            var node = stack.Pop();
+
+            if (node is TranslationGroup group)
+            {
+                var children = group.Children;
+                for (var i = 0; i < children.Length; i++)
+                {
+                    var child = children[i];
+                    if (child is Translation translation)
+                        result.Add(translation.Name, translation.Value);
+                    else
+                        stack.Push(child);
+                }
+            }
+            else if (node is Translation translation)
+            {
+                result.Add(translation.Name, translation.Value);
+            }
+        }
 
         return result;
     }
 
     public string GetValue(string key, IDictionary<string, object> args)
     {
-        var parts = key.Split('.');
+        if (Root == null)
+            return null;
 
+        var span = key.AsSpan();
         var node = Root;
+        var start = 0;
 
-        for (var i = 0; i < parts.Length; i++)
+        for (var i = 0; i <= span.Length; i++)
         {
-            var part = parts[i];
+            if (i < span.Length && span[i] != '.')
+                continue;
+
+            var partSpan = span[start..i];
+            var part = partSpan.ToString();
 
             if (node is TranslationGroup group)
             {
-                var foundNode = group.Children.FirstOrDefault(c => c.Name == part);
-
-                if (foundNode != null)
+                var lookup = _childrenLookup.GetOrAdd(group, BuildLookup);
+                if (lookup.TryGetValue(part, out var foundNode))
+                {
                     node = foundNode;
+                }
                 else
+                {
                     return null;
-
-                continue;
+                }
             }
-
-            if (i < parts.Length)
+            else
+            {
                 throw new TranslationKeyInvalidException(key,
                     $"The key `{key}` ends up in a final translation at part `{part}`. Cannot go down further the translation tree. Please check the key you've provided.");
+            }
+
+            start = i + 1;
         }
 
         if (node is TranslationGroup)
             throw new TranslationKeyInvalidException(key,
                 $"The key `{key}` leads to a group of translations. Unable to resolve a final value for the given key. Please check the key you've provided.");
 
-        var translation = (Translation) node;
-
-        return translation.Value;
+        return ((Translation)node).Value;
     }
 
     public string Namespace { get; set; }
 
-    private void MapTranslationGroup(IDictionary<string, string> result, TranslationGroup group)
+    private static Dictionary<string, TranslationTreeNode> BuildLookup(TranslationGroup group)
     {
-        foreach (var node in group.Children)
+        var children = group.Children;
+        var dict = new Dictionary<string, TranslationTreeNode>(children.Length, StringComparer.Ordinal);
+        for (var i = 0; i < children.Length; i++)
         {
-            if (node is TranslationGroup subGroup)
-                MapTranslationGroup(result, subGroup);
-            else if (node is Translation translation)
-                result.Add(translation.Name, translation.Value);
+            var child = children[i];
+            if (!dict.ContainsKey(child.Name))
+                dict[child.Name] = child;
         }
+        return dict;
     }
 }

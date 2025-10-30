@@ -7,7 +7,7 @@
         <PackageProjectUrl>https://github.com/mahdighorbanpour/I18Next.Net.Version4</PackageProjectUrl>
         <PackageId>I18Next.Net.Version4</PackageId>
         <IsPackable>true</IsPackable>
-        <Version>1.0.1</Version>
+        <Version>1.0.2</Version>
         <Authors>Mahdi Ghorban Pour</Authors>
         <RepositoryType>git</RepositoryType>
         <LangVersion>latest</LangVersion>

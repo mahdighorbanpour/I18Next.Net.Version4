@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using I18Next.Net.Backends;
+﻿using I18Next.Net.Backends;
 using I18Next.Net.Extensions.Configuration;
 using I18Next.Net.Logging;
 using I18Next.Net.Plugins;
@@ -9,6 +6,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace I18Next.Net.Extensions.Builder;
 
@@ -706,6 +706,12 @@ public class I18NextBuilder
 
     private static ILogger DefaultLoggerFactory(IServiceProvider c)
     {
+        var options = c.GetRequiredService<IOptions<I18NextOptions>>();
+        if (!options.Value.LoggingEnabled)
+        {
+            return Plugins.NullLogger.Instance;
+        }
+
         var msLogger = c.GetService<Microsoft.Extensions.Logging.ILogger>();
 
         if (msLogger != null)

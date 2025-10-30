@@ -10,5 +10,7 @@ public class I18NextOptions
 
     public bool DetectLanguageOnEachTranslation { get; set; }
 
+    public bool LoggingEnabled { get; set; } = true;
+
     public IList<string> FallbackLanguages { get; set; } = new List<string>();
 }
