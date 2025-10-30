@@ -7,7 +7,7 @@
         <Product>I18Next.Net</Product>
         <Authors>Mahdi Ghorban Pour</Authors>
         <Company>Mahdi Ghorban Pour</Company>
-        <Version>1.0.1</Version>
+        <Version>1.0.2</Version>
         <RepositoryUrl>https://github.com/mahdighorbanpour/I18Next.Net.Version4</RepositoryUrl>
         <PackageProjectUrl>https://github.com/mahdighorbanpour/I18Next.Net.Version4</PackageProjectUrl>
         <PackageId>I18Next.Net.Gettext.Version4</PackageId>
