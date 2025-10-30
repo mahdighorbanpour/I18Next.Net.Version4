@@ -1,9 +1,9 @@
-﻿using System;
+﻿using I18Next.Net.Logging;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Text;
-using I18Next.Net.Logging;
 
 namespace I18Next.Net.Plugins;
 
